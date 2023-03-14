@@ -207,7 +207,7 @@ def home():
 
 @app.route('/addprsn')
 def addprsn():
-    mycursor.execute("select ifnull(max(prs_nbr) + 1, 100) from prs_mstr")
+    mycursor.execute("select ifnull(max(prs_nbr) + 1, 1000) from prs_mstr")
     row = mycursor.fetchone()
     nbr = row[0]
     # print(int(nbr))
