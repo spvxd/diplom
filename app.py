@@ -24,7 +24,7 @@ mydb = mysql.connector.connect(
 mycursor = mydb.cursor()
 
 
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Generate dataset >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Генерируем датасет >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def generate_dataset(nbr):
     face_classifier = cv2.CascadeClassifier(
         "C:/Users/osipo/OneDrive/Desktop/diplom/resources/haarcascade_frontalface_default.xml")
@@ -76,7 +76,7 @@ def generate_dataset(nbr):
                 cv2.destroyAllWindows()
 
 
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Train Classifier >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Обучение классификатора >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 @app.route('/train_classifier/<nbr>')
 def train_classifier(nbr):
     dataset_dir = "C:/Users/osipo/OneDrive/Desktop/diplom/dataset"
@@ -94,7 +94,7 @@ def train_classifier(nbr):
         ids.append(id)
     ids = np.array(ids)
 
-    # Train the classifier and save
+    # Тренировка классификатора и сохранение
     clf = cv2.face.LBPHFaceRecognizer_create()
     clf.train(faces, ids)
     clf.write("classifier.xml")
@@ -102,8 +102,8 @@ def train_classifier(nbr):
     return redirect('/')
 
 
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Face Recognition >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-def face_recognition():  # generate frame by frame from camera
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<     <<<<<<<<<<<<<<<<< Распознавание лица  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+def face_recognition():  # генерирование кадра за кадром с камеры
     def draw_boundary(img, classifier, scaleFactor, minNeighbors, color, text, clf):
         gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         features = classifier.detectMultiScale(gray_image, scaleFactor, minNeighbors)
@@ -236,19 +236,19 @@ def vfdataset_page(prs):
 
 @app.route('/vidfeed_dataset/<nbr>')
 def vidfeed_dataset(nbr):
-    # Video streaming route. Put this in the src attribute of an img tag
+    # поток видео
     return Response(generate_dataset(nbr), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/video_feed')
 def video_feed():
-    # Video streaming route. Put this in the src attribute of an img tag
+    # поток видео
     return Response(face_recognition(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/fr_page')
 def fr_page():
-    """Video streaming home page."""
+    """Страница для сканирования."""
     mycursor.execute("select a.accs_id, a.accs_prsn, b.prs_name, b.prs_skill, a.accs_added "
                      "  from accs_hist a "
                      "  left join prs_mstr b on a.accs_prsn = b.prs_nbr "
