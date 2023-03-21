@@ -48,7 +48,7 @@ def generate_dataset(nbr):
     lastid = row[0]
 
     img_id = lastid
-    max_imgid = img_id + 100
+    max_imgid = img_id + 1
     count_img = 0
 
     while True:
@@ -207,7 +207,7 @@ def home():
 
 @app.route('/addprsn')
 def addprsn():
-    mycursor.execute("select ifnull(max(prs_nbr) + 1, 100) from prs_mstr")
+    mycursor.execute("select ifnull(max(prs_nbr) + 1, 1) from prs_mstr")
     row = mycursor.fetchone()
     nbr = row[0]
     # print(int(nbr))
