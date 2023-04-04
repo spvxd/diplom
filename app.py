@@ -21,6 +21,7 @@ mydb = mysql.connector.connect(
     database="flask_db",
     charset='utf8'
 )
+
 mycursor = mydb.cursor()
 
 
@@ -48,7 +49,7 @@ def generate_dataset(nbr):
     lastid = row[0]
 
     img_id = lastid
-    max_imgid = img_id + 1
+    max_imgid = img_id + 100
     count_img = 0
 
     while True:
@@ -63,7 +64,7 @@ def generate_dataset(nbr):
             cv2.imwrite(file_name_path, face)
             cv2.putText(face, str(count_img), (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
 
-            mycursor.execute("""INSERT INTO `img_dataset` (`img_id`, `img_person`) VALUES
+            mycursor.execute  ("""INSERT INTO `img_dataset` (`img_id`, `img_person`) VALUES
                                 ('{}', '{}')""".format(img_id, nbr))
             mydb.commit()
 
@@ -128,20 +129,20 @@ def face_recognition():  # генерирование кадра за кадро
                 # w_filled = (n / 100) * w
                 w_filled = (cnt / 30) * w
 
-                cv2.putText(img, str(int(n)) + ' %', (x + 20, y + h + 28), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                cv2.putText(img, str(int(n)) + ' %', (x + 20, y + h + 28), cv2.FONT_HERSHEY_COMPLEX, 0.8,
                             (153, 255, 255), 2, cv2.LINE_AA)
 
                 cv2.rectangle(img, (x, y + h + 40), (x + w, y + h + 50), color, 2)
                 cv2.rectangle(img, (x, y + h + 40), (x + int(w_filled), y + h + 50), (153, 255, 255), cv2.FILLED)
 
-                mycursor.execute("select a.img_person, b.prs_name, b.prs_skill "
+                mycursor.execute("select a.img_person, b.prs_name, b.prs_grp "
                                  "  from img_dataset a "
                                  "  left join prs_mstr b on a.img_person = b.prs_nbr "
                                  " where img_id = " + str(id))
                 row = mycursor.fetchone()
                 pnbr = row[0]
                 pname = row[1]
-                pskill = row[2]
+                pgrp = row[2]
 
                 if int(cnt) == 30:
                     cnt = 0
@@ -150,18 +151,18 @@ def face_recognition():  # генерирование кадра за кадро
                         date.today()) + "', '" + pnbr + "')")
                     mydb.commit()
 
-                    cv2.putText(img, pname + ' | ' + pskill, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8,
+                    cv2.putText(img, pname + ' | ' + pgrp, (x - 100, y - 30), cv2.FONT_HERSHEY_COMPLEX, 0.8,
                                 (153, 255, 255), 2, cv2.LINE_AA)
-                    time.sleep(1)
+                    time.sleep(0.5)
 
                     justscanned = True
                     pause_cnt = 0
 
             else:
                 if not justscanned:
-                    cv2.putText(img, 'Неизвестный', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
+                    cv2.putText(img, 'Неизвестный', (x, y - 5), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
                 else:
-                    cv2.putText(img, ' ', (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
+                    cv2.putText(img, '', (x, y - 5), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
 
                 if pause_cnt > 80:
                     justscanned = False
@@ -199,7 +200,7 @@ def face_recognition():  # генерирование кадра за кадро
 
 @app.route('/')
 def home():
-    mycursor.execute("select prs_nbr, prs_name, prs_skill, prs_active, prs_added from prs_mstr")
+    mycursor.execute("select prs_nbr, prs_name, prs_grp, prs_active, prs_added from prs_mstr")
     data = mycursor.fetchall()
 
     return render_template('index.html', data=data)
@@ -207,7 +208,7 @@ def home():
 
 @app.route('/addprsn')
 def addprsn():
-    mycursor.execute("select ifnull(max(prs_nbr) + 1, 1) from prs_mstr")
+    mycursor.execute("select ifnull(max(prs_nbr) + 1, 100) from prs_mstr")
     row = mycursor.fetchone()
     nbr = row[0]
     # print(int(nbr))
@@ -219,10 +220,10 @@ def addprsn():
 def addprsn_submit():
     prsnbr = request.form.get('txtnbr')
     prsname = request.form.get('txtname')
-    prsskill = request.form.get('optskill')
+    prsgrp = request.form.get('optgrp')
 
-    mycursor.execute("""INSERT INTO `prs_mstr` (`prs_nbr`, `prs_name`, `prs_skill`) VALUES
-                    ('{}', '{}', '{}')""".format(prsnbr, prsname, prsskill))
+    mycursor.execute("""INSERT INTO `prs_mstr` (`prs_nbr`, `prs_name`, `prs_grp`) VALUES
+                    ('{}', '{}', '{}')""".format(prsnbr, prsname, prsgrp))
     mydb.commit()
 
     # return redirect(url_for('home'))
@@ -249,7 +250,7 @@ def video_feed():
 @app.route('/fr_page')
 def fr_page():
     """Страница для сканирования."""
-    mycursor.execute("select a.accs_id, a.accs_prsn, b.prs_name, b.prs_skill, a.accs_added "
+    mycursor.execute("select a.accs_id, a.accs_prsn, b.prs_name, b.prs_grp, a.accs_added "
                      "  from accs_hist a "
                      "  left join prs_mstr b on a.accs_prsn = b.prs_nbr "
                      " where a.accs_date = curdate() "
@@ -289,7 +290,7 @@ def loadData():
     )
     mycursor = mydb.cursor()
 
-    mycursor.execute("select a.accs_id, a.accs_prsn, b.prs_name, b.prs_skill, date_format(a.accs_added, '%H:%i:%s') "
+    mycursor.execute("select a.accs_id, a.accs_prsn, b.prs_name, b.prs_grp, date_format(a.accs_added, '%H:%i:%s') "
                      "  from accs_hist a "
                      "  left join prs_mstr b on a.accs_prsn = b.prs_nbr "
                      " where a.accs_date = curdate() "
