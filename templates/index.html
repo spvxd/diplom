@@ -47,6 +47,7 @@
                         <th>Группа</th>
                         <th>Активность</th>
                         <th>Добавлен</th>
+                        <th>Действие</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,6 +58,7 @@
                             <td>{{item[2]}}</td>
                             <td>{{item[3]}}</td>
                             <td>{{item[4]}}</td>
+                            <td> <a href="/{{item[0]}}/del" type="button" class="btn btn-danger btn-lg"><b>Удалить</b></a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
