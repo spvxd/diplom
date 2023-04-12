@@ -6,6 +6,8 @@ import numpy as np
 import os
 import time
 from datetime import date
+import winsound
+from playsound import playsound
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -23,7 +25,6 @@ mydb = mysql.connector.connect(
 )
 
 mycursor = mydb.cursor()
-
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Генерируем датасет >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def generate_dataset(nbr):
@@ -153,7 +154,11 @@ def face_recognition():  # генерирование кадра за кадро
 
                     cv2.putText(img, pname + ' | ' + pgrp, (x - 100, y - 30), cv2.FONT_HERSHEY_COMPLEX, 0.8,
                                 (153, 255, 255), 2, cv2.LINE_AA)
-                    time.sleep(0.5)
+                    current_path = os.path.dirname(__file__)
+                    sound_folder = os.path.join(current_path, 'resources/')
+                    sound = os.path.join(sound_folder, 'beep.wav')
+                    winsound.PlaySound(sound, winsound.SND_ASYNC)
+                    # time.sleep(0.5)
 
                     justscanned = True
                     pause_cnt = 0
@@ -206,6 +211,17 @@ def home():
     return render_template('index.html', data=data)
 
 
+@app.route('/<int:id>/del')
+def delete(id):
+    mycursor.execute("DELETE FROM prs_mstr WHERE prs_nbr=%s", (id,))
+    mydb.commit()
+
+
+    mycursor.execute("select prs_nbr, prs_name, prs_grp, prs_active, prs_added from prs_mstr")
+    data = mycursor.fetchall()
+
+    return render_template('index.html', data=data)
+
 @app.route('/addprsn')
 def addprsn():
     mycursor.execute("select ifnull(max(prs_nbr) + 1, 100) from prs_mstr")
@@ -237,13 +253,13 @@ def vfdataset_page(prs):
 
 @app.route('/vidfeed_dataset/<nbr>')
 def vidfeed_dataset(nbr):
-    # поток видео
+    # Поток видео
     return Response(generate_dataset(nbr), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 @app.route('/video_feed')
 def video_feed():
-    # поток видео
+    #Поток видео
     return Response(face_recognition(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
@@ -259,7 +275,11 @@ def fr_page():
 
     return render_template('fr_page.html', data=data)
 
-
+@app.route('/fr_page_delete')
+def fr_page_delete():
+    mycursor.execute("TRUNCATE TABLE `accs_hist`")
+    mydb.commit()
+    return render_template('fr_page.html')
 @app.route('/countTodayScan')
 def countTodayScan():
     mydb = mysql.connector.connect(
