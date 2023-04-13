@@ -29,7 +29,7 @@ mycursor = mydb.cursor()
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Генерируем датасет >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def generate_dataset(nbr):
     face_classifier = cv2.CascadeClassifier(
-        "C:/Users/osipo/OneDrive/Desktop/diplom/resources/haarcascade_frontalface_default.xml")
+        "C:/Users/Admin/Desktop/diplom-master/resources/haarcascade_frontalface_default.xml")
 
     def face_cropped(img):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -58,13 +58,22 @@ def generate_dataset(nbr):
         if face_cropped(img) is not None:
             count_img += 1
             img_id += 1
+            if count_img == 5:
+                current_path = os.path.dirname(__file__)
+                sound_folder = os.path.join(current_path, 'resources/')
+                sound = os.path.join(sound_folder, 'wait.wav')
+                winsound.PlaySound(sound, winsound.SND_ASYNC)
+            if count_img == 100:
+                current_path = os.path.dirname(__file__)
+                sound_folder = os.path.join(current_path, 'resources/')
+                sound = os.path.join(sound_folder, 'ready.wav')
+                winsound.PlaySound(sound, winsound.SND_ASYNC)
             face = cv2.resize(face_cropped(img), (200, 200))
             face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
 
             file_name_path = "dataset/" + nbr + "." + str(img_id) + ".jpg"
             cv2.imwrite(file_name_path, face)
             cv2.putText(face, str(count_img), (50, 50), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-
             mycursor.execute  ("""INSERT INTO `img_dataset` (`img_id`, `img_person`) VALUES
                                 ('{}', '{}')""".format(img_id, nbr))
             mydb.commit()
@@ -81,7 +90,7 @@ def generate_dataset(nbr):
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Обучение классификатора >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 @app.route('/train_classifier/<nbr>')
 def train_classifier(nbr):
-    dataset_dir = "C:/Users/osipo/OneDrive/Desktop/diplom/dataset"
+    dataset_dir = "C:/Users/Admin/Desktop/diplom-master/dataset"
 
     path = [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir)]
     faces = []
@@ -132,10 +141,19 @@ def face_recognition():  # генерирование кадра за кадро
 
                 cv2.putText(img, str(int(n)) + ' %', (x + 20, y + h + 28), cv2.FONT_HERSHEY_COMPLEX, 0.8,
                             (153, 255, 255), 2, cv2.LINE_AA)
+                if n == 10:
+                    try:
+                        current_path = os.path.dirname(__file__)
+                        sound_folder = os.path.join(current_path, 'resources/')
+                        sound = os.path.join(sound_folder, 'scaner.wav')
+                        winsound.PlaySound(sound, winsound.SND_ASYNC)
+                        if n > 90:
+                            break
+                    except:
+                        break
 
                 cv2.rectangle(img, (x, y + h + 40), (x + w, y + h + 50), color, 2)
                 cv2.rectangle(img, (x, y + h + 40), (x + int(w_filled), y + h + 50), (153, 255, 255), cv2.FILLED)
-
                 mycursor.execute("select a.img_person, b.prs_name, b.prs_grp "
                                  "  from img_dataset a "
                                  "  left join prs_mstr b on a.img_person = b.prs_nbr "
@@ -180,7 +198,7 @@ def face_recognition():  # генерирование кадра за кадро
         return img
 
     faceCascade = cv2.CascadeClassifier(
-        "C:/Users/osipo/OneDrive/Desktop/diplom/resources/haarcascade_frontalface_default.xml")
+        "C:/Users/Admin/Desktop/diplom-master/resources/haarcascade_frontalface_default.xml")
     clf = cv2.face.LBPHFaceRecognizer_create()
     clf.read("classifier.xml")
 
